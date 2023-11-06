@@ -24,6 +24,9 @@ wheels/
 .installed.cfg
 *.egg
 MANIFEST
+/work_dirs
+/work_dirs_new
+/data
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

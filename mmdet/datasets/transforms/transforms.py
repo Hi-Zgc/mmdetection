@@ -2251,6 +2251,114 @@ class CutOut(BaseTransform):
 
 
 @TRANSFORMS.register_module()
+class P_CutOut(BaseTransform):
+    """CutOut operation.
+
+    Randomly drop some regions of image used in
+    `Cutout <https://arxiv.org/abs/1708.04552>`_.
+
+    Required Keys:
+
+    - img
+
+    Modified Keys:
+
+    - img
+
+    Args:
+        n_holes (int or tuple[int, int]): Number of regions to be dropped.
+            If it is given as a list, number of holes will be randomly
+            selected from the closed interval [``n_holes[0]``, ``n_holes[1]``].
+        cutout_shape (tuple[int, int] or list[tuple[int, int]], optional):
+            The candidate shape of dropped regions. It can be
+            ``tuple[int, int]`` to use a fixed cutout shape, or
+            ``list[tuple[int, int]]`` to randomly choose shape
+            from the list. Defaults to None.
+        cutout_ratio (tuple[float, float] or list[tuple[float, float]],
+            optional): The candidate ratio of dropped regions. It can be
+            ``tuple[float, float]`` to use a fixed ratio or
+            ``list[tuple[float, float]]`` to randomly choose ratio
+            from the list. Please note that ``cutout_shape`` and
+            ``cutout_ratio`` cannot be both given at the same time.
+            Defaults to None.
+        fill_in (tuple[float, float, float] or tuple[int, int, int]): The value
+            of pixel to fill in the dropped regions. Defaults to (0, 0, 0).
+    """
+
+    def __init__(
+        self,
+        n_holes: Union[int, Tuple[int, int]],
+        cutout_shape: Optional[Union[Tuple[int, int],
+                                     List[Tuple[int, int]]]] = None,
+        cutout_ratio: Optional[Union[Tuple[float, float],
+                                     List[Tuple[float, float]]]] = None,
+        fill_in: Union[Tuple[float, float, float], Tuple[int, int,
+                                                         int]] = (0, 0, 0)
+    ) -> None:
+
+        assert (cutout_shape is None) ^ (cutout_ratio is None), \
+            'Either cutout_shape or cutout_ratio should be specified.'
+        assert (isinstance(cutout_shape, (list, tuple))
+                or isinstance(cutout_ratio, (list, tuple)))
+        if isinstance(n_holes, tuple):
+            assert len(n_holes) == 2 and 0 <= n_holes[0] < n_holes[1]
+        else:
+            n_holes = (n_holes, n_holes)
+        self.n_holes = n_holes
+        self.fill_in = fill_in
+        self.with_ratio = cutout_ratio is not None
+        self.candidates = cutout_ratio if self.with_ratio else cutout_shape
+        if not isinstance(self.candidates, list):
+            self.candidates = [self.candidates]
+
+    @autocast_box_type()
+    def transform(self, results: dict) -> dict:
+        """Call function to drop some regions of image."""
+        h, w, c = results['img'].shape
+        n_holes = np.random.randint(self.n_holes[0], self.n_holes[1] + 1)
+        box_list = []
+        instances = results['instances']
+        for index, instance in enumerate(instances):
+            bbox = instance['bbox']
+            x0, y0, x1, y1 = bbox[0], bbox[1], bbox[2], bbox[3]
+            box = [x0, y0, x1, y1]
+            box_list.append(box)
+            width = (x1 - x0)
+            height = (y1 - y0)
+            area = width * height
+            cutout_w = 0
+            cutout_h = 0
+            if area < 32 * 32:
+                return results
+            elif area >= 32 * 32 and area < 96 * 96:
+                cutout_w = random.choice([width / 8, width / 10, width / 12, width / 16])
+                cutout_h = random.choice([height / 8, height / 10, height / 12, height / 16])
+            else:
+                cutout_w = random.choice([width / 12, width / 14, width / 16])
+                cutout_h = random.choice([height / 12, height / 14, height / 16])
+            for _ in range(n_holes):
+                # 获得检测框范围内的位置
+                xl = np.random.randint(x0, x1)
+                yl = np.random.randint(y0, y1)
+
+                xr = int(np.clip(xl + cutout_w, x0, x1))
+                yr = int(np.clip(yl + cutout_h, y0, y1))
+                results['img'][yl:yr, xl:xr, :] = self.fill_in
+
+        # X = Image.fromarray(results['img'])
+        # X.save('img1.jpg')
+        return results
+
+    def __repr__(self):
+        repr_str = self.__class__.__name__
+        repr_str += f'(n_holes={self.n_holes}, '
+        repr_str += (f'cutout_ratio={self.candidates}, ' if self.with_ratio
+                     else f'cutout_shape={self.candidates}, ')
+        repr_str += f'fill_in={self.fill_in})'
+        return repr_str
+
+
+@TRANSFORMS.register_module()
 class Mosaic(BaseTransform):
     """Mosaic augmentation.
 

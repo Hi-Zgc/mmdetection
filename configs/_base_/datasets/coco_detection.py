@@ -1,6 +1,6 @@
 # dataset settings
 dataset_type = 'CocoDataset'
-data_root = 'data/coco/'
+data_root = '../data/coco/'
 
 # Example to use different file client
 # Method 1: simply set the data root and let the file I/O module
@@ -16,10 +16,19 @@ data_root = 'data/coco/'
 #         'data/': 's3://openmmlab/datasets/detection/'
 #     }))
 backend_args = None
-
-train_pipeline = [
+img_scale = (640, 640)
+load_pileline = [
     dict(type='LoadImageFromFile', backend_args=backend_args),
     dict(type='LoadAnnotations', with_bbox=True),
+]
+train_pipeline = [
+    dict(type="P_CutOut", n_holes=5, cutout_ratio=(0.8, 0.8), fill_in=(255, 255, 255)),
+    # dict(type="CutOut", n_holes=1, cutout_ratio=(0.8, 0.8), fill_in=(255, 255, 255)),
+    dict(type='Mosaic', img_scale=img_scale, pad_val=114.0),
+    dict(
+        type='RandomAffine',
+        scaling_ratio_range=(0.1, 2),
+        border=(-img_scale[0] // 2, -img_scale[1] // 2)), # 图像经过马赛克处理后会放大4倍，所以我们使用仿射变换来恢复图像的大小。
     dict(type='Resize', scale=(1333, 800), keep_ratio=True),
     dict(type='RandomFlip', prob=0.5),
     dict(type='PackDetInputs')
@@ -35,19 +44,25 @@ test_pipeline = [
                    'scale_factor'))
 ]
 train_dataloader = dict(
-    batch_size=2,
+    batch_size=1,
     num_workers=2,
     persistent_workers=True,
     sampler=dict(type='DefaultSampler', shuffle=True),
     batch_sampler=dict(type='AspectRatioBatchSampler'),
     dataset=dict(
-        type=dataset_type,
-        data_root=data_root,
-        ann_file='annotations/instances_train2017.json',
-        data_prefix=dict(img='train2017/'),
-        filter_cfg=dict(filter_empty_gt=True, min_size=32),
-        pipeline=train_pipeline,
-        backend_args=backend_args))
+        # _delete_ = True, # 删除不必要的设置
+        type='MultiImageMixDataset',
+        dataset=dict(
+            type=dataset_type,
+            data_root=data_root,
+            ann_file='annotations/instances_train2017.json',
+            data_prefix=dict(img='train2017/'),
+            filter_cfg=dict(filter_empty_gt=True, min_size=32),
+            pipeline=load_pileline,
+            backend_args=backend_args
+        ),
+        pipeline=train_pipeline
+        ))
 val_dataloader = dict(
     batch_size=1,
     num_workers=2,

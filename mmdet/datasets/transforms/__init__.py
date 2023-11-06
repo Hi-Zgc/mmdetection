@@ -20,7 +20,7 @@ from .transforms import (Albu, CachedMixUp, CachedMosaic, CopyPaste, CutOut,
                          PhotoMetricDistortion, RandomAffine,
                          RandomCenterCropPad, RandomCrop, RandomErasing,
                          RandomFlip, RandomShift, Resize, ResizeShortestEdge,
-                         SegRescale, YOLOXHSVRandomAug)
+                         SegRescale, YOLOXHSVRandomAug, P_CutOut)
 from .wrappers import MultiBranch, ProposalBroadcaster, RandomOrder
 
 __all__ = [
@@ -39,5 +39,6 @@ __all__ = [
     'FixShapeResize', 'ProposalBroadcaster', 'InferencerLoader',
     'LoadTrackAnnotations', 'BaseFrameSample', 'UniformRefFrameSample',
     'PackTrackInputs', 'PackReIDInputs', 'FixScaleResize',
-    'ResizeShortestEdge', 'GTBoxSubOne_GLIP', 'RandomFlip_GLIP'
+    'ResizeShortestEdge', 'GTBoxSubOne_GLIP', 'RandomFlip_GLIP',
+    'P_CutOut'
 ]

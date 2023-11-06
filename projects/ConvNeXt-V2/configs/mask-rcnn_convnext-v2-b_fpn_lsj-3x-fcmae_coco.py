@@ -1,5 +1,5 @@
 _base_ = [
-    'mmdet::_base_/models/mask-rcnn_r50_fpn.py',
+    'mmdet::_base_/models/cascade-rcnn_r50_fpn.py',
     'mmdet::_base_/datasets/coco_instance.py',
     'mmdet::_base_/schedules/schedule_1x.py',
     'mmdet::_base_/default_runtime.py'
@@ -33,7 +33,7 @@ model = dict(
 
 train_pipeline = [
     dict(type='LoadImageFromFile', backend_args=_base_.backend_args),
-    dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
+    dict(type='LoadAnnotations', with_bbox=True, with_mask=False),
     dict(
         type='RandomResize',
         scale=image_size,

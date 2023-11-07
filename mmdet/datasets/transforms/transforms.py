@@ -35,7 +35,7 @@ try:
 except ImportError:
     albumentations = None
     Compose = None
-
+from PIL import Image
 Number = Union[int, float]
 
 
@@ -2331,11 +2331,11 @@ class P_CutOut(BaseTransform):
             if area < 32 * 32:
                 return results
             elif area >= 32 * 32 and area < 96 * 96:
-                cutout_w = random.choice([width / 8, width / 10, width / 12, width / 16])
-                cutout_h = random.choice([height / 8, height / 10, height / 12, height / 16])
+                cutout_w = random.choice([width / 6, width / 8, width / 10, width / 12])
+                cutout_h = random.choice([height / 6, height / 8, height / 10, height / 12])
             else:
-                cutout_w = random.choice([width / 12, width / 14, width / 16])
-                cutout_h = random.choice([height / 12, height / 14, height / 16])
+                cutout_w = random.choice([width / 8, width / 10, width / 12])
+                cutout_h = random.choice([height / 8, height / 10, height / 12])
             for _ in range(n_holes):
                 # 获得检测框范围内的位置
                 xl = np.random.randint(x0, x1)
@@ -2345,8 +2345,8 @@ class P_CutOut(BaseTransform):
                 yr = int(np.clip(yl + cutout_h, y0, y1))
                 results['img'][yl:yr, xl:xr, :] = self.fill_in
 
-        # X = Image.fromarray(results['img'])
-        # X.save('img1.jpg')
+        X = Image.fromarray(results['img'])
+        X.save('img1.jpg')
         return results
 
     def __repr__(self):

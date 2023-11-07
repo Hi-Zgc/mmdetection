@@ -2345,8 +2345,8 @@ class P_CutOut(BaseTransform):
                 yr = int(np.clip(yl + cutout_h, y0, y1))
                 results['img'][yl:yr, xl:xr, :] = self.fill_in
 
-        X = Image.fromarray(results['img'])
-        X.save('img1.jpg')
+        # X = Image.fromarray(results['img'])
+        # X.save('img1.jpg')
         return results
 
     def __repr__(self):

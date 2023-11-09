@@ -22,7 +22,7 @@ load_pileline = [
     dict(type='LoadAnnotations', with_bbox=True),
 ]
 train_pipeline = [
-    dict(type="P_CutOut", n_holes=5, cutout_ratio=(0.8, 0.8), fill_in=(255, 255, 255)),
+    dict(type="P_CutOut", n_holes=5, cutout_ratio=(0.8, 0.8), fill_in=(0, 0, 0)),
     # dict(type="CutOut", n_holes=1, cutout_ratio=(0.8, 0.8), fill_in=(255, 255, 255)),
     dict(type='Mosaic', img_scale=img_scale, pad_val=114.0),
     dict(
